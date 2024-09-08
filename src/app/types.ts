@@ -9,7 +9,9 @@ export type User = {
   updatedAt: Date;
   bio?: string;
   location?: string;
-  balance: number; // Добавлено поле для баланса
+  balance: number; // Поле для баланса
+  balanceMining: number; // Добавлено поле для майнинга баланса
+  isPremium: boolean; // Добавлено поле для премиум статуса
   posts: Post[];
   following: Follows[];
   followers: Follows[];

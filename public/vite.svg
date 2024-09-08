@@ -1,0 +1,11 @@
+import React from 'react';
+
+        const App = () => {
+        return (
+<div>
+    <img src="/vite.svg" alt="Vite logo" />
+</div>
+        );
+        };
+
+        export default App;

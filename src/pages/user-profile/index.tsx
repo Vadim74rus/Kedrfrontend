@@ -1,77 +1,106 @@
-import { useEffect } from "react"
-import { useParams } from "react-router-dom"
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import {
   useGetUserByIdQuery,
   useLazyCurrentQuery,
   useLazyGetUserByIdQuery,
-} from "../../app/services/userApi"
-import { useDispatch, useSelector } from "react-redux"
-import { resetUser, selectCurrent } from "../../features/user/userSlice"
-import { Button, Card, Image } from "@nextui-org/react"
-import { MdOutlinePersonAddAlt1 } from "react-icons/md"
-import { MdOutlinePersonAddDisabled } from "react-icons/md"
-import { useDisclosure } from "@nextui-org/react"
+} from "../../app/services/userApi";
+import { useDispatch, useSelector } from "react-redux";
+import { resetUser, selectCurrent } from "../../features/user/userSlice";
+import { Button, Card, Image } from "@nextui-org/react";
+import { MdOutlinePersonAddAlt1, MdOutlinePersonAddDisabled, MdOutlineMail } from "react-icons/md";
+import { useDisclosure } from "@nextui-org/react";
 import {
   useFollowUserMutation,
   useUnfollowUserMutation,
-} from "../../app/services/followApi"
-import { GoBack } from "../../components/go-back"
-import { BASE_URL } from "../../constants"
-import { CiEdit } from "react-icons/ci"
-import { EditProfile } from "../../components/edit-profile"
-import { formatToClientDate } from "../../utils/format-to-client-date"
-import { ProfileInfo } from "../../components/profile-info"
-import { CountInfo } from "../../components/count-info"
+} from "../../app/services/followApi";
+import { GoBack } from "../../components/go-back";
+import { BASE_URL } from "../../constants";
+import { CiEdit } from "react-icons/ci";
+import { EditProfile } from "../../components/edit-profile";
+import { formatToClientDate } from "../../utils/format-to-client-date";
+import { ProfileInfo } from "../../components/profile-info";
+import { CountInfo } from "../../components/count-info";
+import axios from "axios";
+import { MiningComponent } from "../../components/mining-component";
 
 export const UserProfile = () => {
-  const { id } = useParams<{ id: string }>()
-  const { isOpen, onOpen, onClose } = useDisclosure()
-  const currentUser = useSelector(selectCurrent)
-  const { data } = useGetUserByIdQuery(id ?? "")
-  const [followUser] = useFollowUserMutation()
-  const [unfolowUser] = useUnfollowUserMutation()
-  const [triggerGetUserByIdQuery] = useLazyGetUserByIdQuery()
-  const [triggerCurrentQuery] = useLazyCurrentQuery()
+  const { id } = useParams<{ id: string }>();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const currentUser = useSelector(selectCurrent);
+  const { data, refetch } = useGetUserByIdQuery(id ?? "");
+  const [followUser] = useFollowUserMutation();
+  const [unfolowUser] = useUnfollowUserMutation();
+  const [triggerGetUserByIdQuery] = useLazyGetUserByIdQuery();
+  const [triggerCurrentQuery] = useLazyCurrentQuery();
+  const [balance, setBalance] = useState(data?.balance || 0);
+  const [balanceMining, setBalanceMining] = useState(data?.balanceMining || 0);
+  const [messageCount, setMessageCount] = useState(0);
 
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
 
-  useEffect(
-      () => () => {
-        dispatch(resetUser())
-      },
-      [],
-  )
+  useEffect(() => {
+    if (data) {
+      setBalance(data.balance);
+      setBalanceMining(data.balanceMining || 0);
+    }
+  }, [data]);
+
+  useEffect(() => {
+    return () => {
+      dispatch(resetUser());
+    };
+  }, [dispatch]);
+
+  useEffect(() => {
+    const fetchMessageCount = async () => {
+      try {
+        if (id) {
+          const response = await axios.get(`http://localhost:3000/api/messages/${id}`);
+          setMessageCount(response.data.length);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    fetchMessageCount();
+  }, [id]);
+
+  useEffect(() => {
+    // Обновление данных пользователя при монтировании компонента
+    refetch();
+  }, [refetch]);
 
   const handleFollow = async () => {
     try {
       if (id) {
         data?.isFollowing
             ? await unfolowUser(id).unwrap()
-            : await followUser({ followingId: id }).unwrap()
+            : await followUser({ followingId: id }).unwrap();
 
-        await triggerGetUserByIdQuery(id)
-
-        await triggerCurrentQuery()
+        await triggerGetUserByIdQuery(id);
+        await triggerCurrentQuery();
       }
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
-  }
+  };
 
   const handleClose = async () => {
     try {
       if (id) {
-        await triggerGetUserByIdQuery(id)
-        await triggerCurrentQuery()
-        onClose()
+        await triggerGetUserByIdQuery(id);
+        await triggerCurrentQuery();
+        onClose();
       }
     } catch (err) {
-      console.log(err)
+      console.log(err);
     }
-  }
+  };
 
   if (!data) {
-    return null
+    return null;
   }
 
   return (
@@ -102,16 +131,26 @@ export const UserProfile = () => {
                         )
                       }
                   >
-                    {data?.isFollowing ? 'Отписаться' : 'Подписаться'}
+                    {data?.isFollowing ? "Отписаться" : "Подписаться"}
                   </Button>
               ) : (
-                  <Button
-                      endContent={<CiEdit />}
-                      onClick={() => onOpen()}
-                  >
+                  <Button endContent={<CiEdit />} onClick={() => onOpen()}>
                     Редактировать
                   </Button>
               )}
+              {currentUser?.id === id && (
+                  <MiningComponent
+                      balanceMining={balanceMining}
+                      setBalanceMining={setBalanceMining}
+                      balance={balance}
+                      setBalance={setBalance}
+                      refetch={refetch}
+                      currentUser={currentUser}
+                  />
+              )}
+              <Button endContent={<MdOutlineMail />} onClick={() => alert("Send message")}>
+                Сообщение {messageCount > 0 && `(${messageCount})`}
+              </Button>
             </div>
           </Card>
           <Card className="flex flex-col space-y-4 p-5 flex-1">
@@ -119,15 +158,17 @@ export const UserProfile = () => {
             <ProfileInfo title="Местоположение:" info={data.location} />
             <ProfileInfo title="Дата рождения:" info={formatToClientDate(data.dateOfBirth)} />
             <ProfileInfo title="Обо мне:" info={data.bio} />
-            <ProfileInfo title="Баланс:" info={`${data.balance} ₽`} />
+            <ProfileInfo title="Счет:" info={`${balance.toFixed(4)} KEDR`} />
+            <ProfileInfo title="Майнинг:" info={`${balanceMining.toFixed(4)} KEDR`} />
 
             <div className="flex gap-2">
-              <CountInfo count={data.followers.length} title="Подписчики"/>
-              <CountInfo count={data.following.length} title="Подписки"/>
+              <CountInfo count={data.followers.length} title="Подписчики" />
+              <CountInfo count={data.following.length} title="Подписки" />
             </div>
           </Card>
         </div>
         <EditProfile isOpen={isOpen} onClose={handleClose} user={data} />
       </>
-  )
-}
+  );
+};
+
