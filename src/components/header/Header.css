@@ -1,0 +1,16 @@
+.logo-container {
+    display: flex;
+    align-items: center;
+}
+
+.logo {
+    width: 40px; /* Размер логотипа */
+    height: 40px; /* Размер логотипа */
+    margin-right: 10px; /* Отступ между логотипом и текстом */
+    animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
