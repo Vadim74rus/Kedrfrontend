@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/react-threads.iml" filepath="$PROJECT_DIR$/.idea/react-threads.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/Kedrfrontend.iml" filepath="$PROJECT_DIR$/.idea/Kedrfrontend.iml" />
     </modules>
   </component>
 </project>
