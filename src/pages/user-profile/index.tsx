@@ -8,7 +8,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { resetUser, selectCurrent } from "../../features/user/userSlice";
 import { Button, Card, Image } from "@nextui-org/react";
-import { MdOutlinePersonAddAlt1, MdOutlinePersonAddDisabled, MdOutlineMail } from "react-icons/md";
+import { MdOutlinePersonAddAlt1, MdOutlinePersonAddDisabled } from "react-icons/md";
 import { useDisclosure } from "@nextui-org/react";
 import {
   useFollowUserMutation,
@@ -21,7 +21,6 @@ import { EditProfile } from "../../components/edit-profile";
 import { formatToClientDate } from "../../utils/format-to-client-date";
 import { ProfileInfo } from "../../components/profile-info";
 import { CountInfo } from "../../components/count-info";
-import axios from "axios";
 import { MiningComponent } from "../../components/mining-component";
 
 export const UserProfile = () => {
@@ -35,7 +34,6 @@ export const UserProfile = () => {
   const [triggerCurrentQuery] = useLazyCurrentQuery();
   const [balance, setBalance] = useState(data?.balance || 0);
   const [balanceMining, setBalanceMining] = useState(data?.balanceMining || 0);
-  const [messageCount, setMessageCount] = useState(0);
 
   const dispatch = useDispatch();
 
@@ -51,21 +49,6 @@ export const UserProfile = () => {
       dispatch(resetUser());
     };
   }, [dispatch]);
-
-  useEffect(() => {
-    const fetchMessageCount = async () => {
-      try {
-        if (id) {
-          const response = await axios.get(`http://localhost:3000/api/messages/${id}`);
-          setMessageCount(response.data.length);
-        }
-      } catch (error) {
-        console.log(error);
-      }
-    };
-
-    fetchMessageCount();
-  }, [id]);
 
   useEffect(() => {
     // Обновление данных пользователя при монтировании компонента
@@ -148,9 +131,6 @@ export const UserProfile = () => {
                       currentUser={currentUser}
                   />
               )}
-              <Button endContent={<MdOutlineMail />} onClick={() => alert("Send message")}>
-                Сообщение {messageCount > 0 && `(${messageCount})`}
-              </Button>
             </div>
           </Card>
           <Card className="flex flex-col space-y-4 p-5 flex-1">
